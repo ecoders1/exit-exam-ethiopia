@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isAdmin } from "@/lib/supabase/admin";
 import {
   LayoutDashboard, University, BookOpen, FileText, Users,
-  LogOut, Menu, X, GraduationCap, ChevronRight, Sun, Moon,
+  LogOut, Menu, X, GraduationCap, ChevronRight, Sun, Moon, ShieldAlert,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -25,8 +26,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { theme, setTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    async function checkAuth() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !isAdmin(user.email)) {
+        router.replace("/login");
+        return;
+      }
+      setAdminEmail(user.email ?? "");
+      setAuthorized(true);
+      setChecking(false);
+    }
+    checkAuth();
+  }, [router]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -36,6 +54,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isActive = (item: { href: string; exact?: boolean }) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
+
+  // Loading state
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center animate-pulse">
+            <ShieldAlert className="w-5 h-5 text-white" />
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Verifying access…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authorized) return null;
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside className={cn(
@@ -64,7 +98,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               href={item.href}
               onClick={() => setSidebarOpen(false)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                 active
                   ? "bg-blue-600 text-white"
                   : "text-gray-400 hover:bg-gray-800 hover:text-white"
@@ -78,8 +112,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </nav>
 
-      {/* Bottom */}
+      {/* Admin badge + bottom actions */}
       <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+        <div className="flex items-center gap-2 px-3 py-2 mb-2">
+          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {adminEmail.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-medium truncate">{adminEmail}</p>
+            <p className="text-blue-400 text-xs">Administrator</p>
+          </div>
+        </div>
         <Link
           href="/"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-all"
@@ -111,10 +154,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
           <div className="relative flex h-full">
             <Sidebar mobile />
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="absolute top-4 right-4 p-1 text-gray-400 hover:text-white"
-            >
+            <button onClick={() => setSidebarOpen(false)}
+              className="absolute top-4 right-[-40px] p-1 text-white">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -125,36 +166,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <header className="h-14 shrink-0 flex items-center justify-between px-4 sm:px-6 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
+          <button onClick={() => setSidebarOpen(true)}
+            className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
             <Menu className="w-5 h-5" />
           </button>
-          <div className="hidden lg:block">
-            <nav className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <span>Admin</span>
-              {pathname !== "/admin" && (
-                <>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                  <span className="capitalize text-gray-900 dark:text-white font-medium">
-                    {pathname.split("/").pop()?.replace(/-/g, " ")}
-                  </span>
-                </>
-              )}
-            </nav>
+          <div className="hidden lg:flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+            <span>Admin</span>
+            {pathname !== "/admin" && (
+              <>
+                <ChevronRight className="w-3.5 h-3.5" />
+                <span className="capitalize text-gray-900 dark:text-white font-medium">
+                  {pathname.split("/").filter(Boolean).slice(1).join(" / ")}
+                </span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2 ml-auto">
             {mounted && (
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
+              <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
             )}
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-              A
+              {adminEmail.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>

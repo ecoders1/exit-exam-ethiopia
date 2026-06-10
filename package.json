@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "release:patch": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1 patch",
+    "release:minor": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1 minor",
+    "release:major": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1 major"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

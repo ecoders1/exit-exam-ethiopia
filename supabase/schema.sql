@@ -11,6 +11,7 @@ create table if not exists public.profiles (
   avatar_url text,
   university_id uuid,
   department_id uuid,
+  role text default 'student' check (role in ('student', 'admin')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -97,8 +98,12 @@ create policy "Users can update own progress"
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data->>'full_name');
+  insert into public.profiles (id, full_name, role)
+  values (
+    new.id,
+    new.raw_user_meta_data->>'full_name',
+    coalesce(new.raw_user_meta_data->>'role', 'student')
+  );
   return new;
 end;
 $$ language plpgsql security definer;

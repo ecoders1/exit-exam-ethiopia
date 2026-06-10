@@ -1,100 +1,225 @@
 -- Exit Exam Ethiopia — Supabase Schema
 -- Run this in your Supabase SQL Editor
 
--- Enable UUID extension
+-- ============================================================
+-- Extensions
+-- ============================================================
 create extension if not exists "uuid-ossp";
 
--- Profiles table (extends Supabase auth.users)
+-- ============================================================
+-- Tables
+-- ============================================================
+
+-- Profiles (extends auth.users)
 create table if not exists public.profiles (
-  id uuid references auth.users(id) on delete cascade primary key,
-  full_name text,
-  avatar_url text,
+  id            uuid references auth.users(id) on delete cascade primary key,
+  full_name     text,
+  avatar_url    text,
   university_id uuid,
   department_id uuid,
-  role text default 'student' check (role in ('student', 'admin')),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  role          text not null default 'student' check (role in ('student', 'admin')),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
 );
 
--- Universities table
+-- Universities
 create table if not exists public.universities (
-  id uuid default uuid_generate_v4() primary key,
-  name text not null,
+  id         uuid not null default uuid_generate_v4() primary key,
+  name       text not null unique,
   short_name text,
-  location text,
-  logo_url text,
-  website text,
-  created_at timestamptz default now()
+  location   text,
+  logo_url   text,
+  website    text,
+  created_at timestamptz not null default now()
 );
 
--- Departments table
+-- Departments
 create table if not exists public.departments (
-  id uuid default uuid_generate_v4() primary key,
-  name text not null,
-  icon text,
+  id          uuid not null default uuid_generate_v4() primary key,
+  name        text not null unique,
+  icon        text,
   description text,
-  created_at timestamptz default now()
+  created_at  timestamptz not null default now()
 );
 
--- Exams table
+-- Add FK constraints on profiles after universities/departments exist
+alter table public.profiles
+  add constraint if not exists profiles_university_id_fkey
+  foreign key (university_id) references public.universities(id) on delete set null;
+
+alter table public.profiles
+  add constraint if not exists profiles_department_id_fkey
+  foreign key (department_id) references public.departments(id) on delete set null;
+
+-- Exams
 create table if not exists public.exams (
-  id uuid default uuid_generate_v4() primary key,
-  title text not null,
+  id            uuid not null default uuid_generate_v4() primary key,
+  title         text not null,
   university_id uuid references public.universities(id) on delete set null,
   department_id uuid references public.departments(id) on delete set null,
-  year integer not null,
-  file_url text,
-  pages integer,
-  downloads integer default 0,
-  is_published boolean default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  year          integer not null,
+  file_url      text,
+  pages         integer,
+  downloads     integer not null default 0,
+  is_published  boolean not null default true,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
 );
 
 -- User exam progress
 create table if not exists public.user_exam_progress (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade,
-  exam_id uuid references public.exams(id) on delete cascade,
-  score integer,
-  completed boolean default false,
-  accessed_at timestamptz default now(),
+  id          uuid not null default uuid_generate_v4() primary key,
+  user_id     uuid references auth.users(id) on delete cascade,
+  exam_id     uuid references public.exams(id) on delete cascade,
+  score       integer,
+  completed   boolean not null default false,
+  accessed_at timestamptz not null default now(),
   unique(user_id, exam_id)
 );
 
+-- ============================================================
+-- updated_at trigger
+-- ============================================================
+create or replace function public.set_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger trg_profiles_updated_at
+  before update on public.profiles
+  for each row execute procedure public.set_updated_at();
+
+create or replace trigger trg_exams_updated_at
+  before update on public.exams
+  for each row execute procedure public.set_updated_at();
+
+-- ============================================================
 -- Row Level Security
-alter table public.profiles enable row level security;
-alter table public.universities enable row level security;
-alter table public.departments enable row level security;
-alter table public.exams enable row level security;
+-- ============================================================
+alter table public.profiles           enable row level security;
+alter table public.universities       enable row level security;
+alter table public.departments        enable row level security;
+alter table public.exams              enable row level security;
 alter table public.user_exam_progress enable row level security;
 
--- Policies
-create policy "Public universities are viewable by everyone"
+-- Helper: is the current user an admin?
+create or replace function public.is_admin()
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$ language sql security definer stable;
+
+-- ============================================================
+-- Policies — universities
+-- ============================================================
+drop policy if exists "Public universities are viewable by everyone" on public.universities;
+create policy "Universities: public read"
   on public.universities for select using (true);
 
-create policy "Public departments are viewable by everyone"
+create policy "Universities: admin insert"
+  on public.universities for insert
+  with check (public.is_admin());
+
+create policy "Universities: admin update"
+  on public.universities for update
+  using (public.is_admin());
+
+create policy "Universities: admin delete"
+  on public.universities for delete
+  using (public.is_admin());
+
+-- ============================================================
+-- Policies — departments
+-- ============================================================
+drop policy if exists "Public departments are viewable by everyone" on public.departments;
+create policy "Departments: public read"
   on public.departments for select using (true);
 
-create policy "Published exams are viewable by everyone"
+create policy "Departments: admin insert"
+  on public.departments for insert
+  with check (public.is_admin());
+
+create policy "Departments: admin update"
+  on public.departments for update
+  using (public.is_admin());
+
+create policy "Departments: admin delete"
+  on public.departments for delete
+  using (public.is_admin());
+
+-- ============================================================
+-- Policies — exams
+-- ============================================================
+drop policy if exists "Published exams are viewable by everyone" on public.exams;
+create policy "Exams: public read published"
   on public.exams for select using (is_published = true);
 
-create policy "Users can view own profile"
+create policy "Exams: admin read all"
+  on public.exams for select
+  using (public.is_admin());
+
+create policy "Exams: admin insert"
+  on public.exams for insert
+  with check (public.is_admin());
+
+create policy "Exams: admin update"
+  on public.exams for update
+  using (public.is_admin());
+
+create policy "Exams: admin delete"
+  on public.exams for delete
+  using (public.is_admin());
+
+-- ============================================================
+-- Policies — profiles
+-- ============================================================
+drop policy if exists "Users can view own profile"   on public.profiles;
+drop policy if exists "Users can update own profile" on public.profiles;
+
+create policy "Profiles: own read"
   on public.profiles for select using (auth.uid() = id);
 
-create policy "Users can update own profile"
+create policy "Profiles: own update"
   on public.profiles for update using (auth.uid() = id);
 
-create policy "Users can view own progress"
+-- Admins can read all profiles (needed for the Users admin page)
+create policy "Profiles: admin read all"
+  on public.profiles for select using (public.is_admin());
+
+-- ============================================================
+-- Policies — user_exam_progress
+-- ============================================================
+drop policy if exists "Users can view own progress"   on public.user_exam_progress;
+drop policy if exists "Users can upsert own progress" on public.user_exam_progress;
+drop policy if exists "Users can update own progress" on public.user_exam_progress;
+
+create policy "Progress: own read"
   on public.user_exam_progress for select using (auth.uid() = user_id);
 
-create policy "Users can upsert own progress"
+create policy "Progress: own insert"
   on public.user_exam_progress for insert with check (auth.uid() = user_id);
 
-create policy "Users can update own progress"
+create policy "Progress: own update"
   on public.user_exam_progress for update using (auth.uid() = user_id);
 
+-- ============================================================
+-- RPC: increment download counter (avoids needing a broad write policy)
+-- ============================================================
+create or replace function public.increment_exam_downloads(exam_id uuid)
+returns void as $$
+  update public.exams
+  set downloads = downloads + 1
+  where id = exam_id and is_published = true;
+$$ language sql security definer;
+
+-- ============================================================
 -- Auto-create profile on signup
+-- ============================================================
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -108,26 +233,36 @@ begin
 end;
 $$ language plpgsql security definer;
 
-create or replace trigger on_auth_user_created
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- ============================================================
 -- Sample data
+-- ============================================================
 insert into public.universities (name, short_name, location) values
-  ('Addis Ababa University', 'AAU', 'Addis Ababa'),
-  ('Jimma University', 'JU', 'Jimma'),
-  ('Mekelle University', 'MU', 'Mekelle'),
-  ('Hawassa University', 'HU', 'Hawassa'),
-  ('Bahir Dar University', 'BDU', 'Bahir Dar')
-on conflict do nothing;
+  ('Addis Ababa University',  'AAU',  'Addis Ababa'),
+  ('Jimma University',        'JU',   'Jimma'),
+  ('Mekelle University',      'MU',   'Mekelle'),
+  ('Hawassa University',      'HU',   'Hawassa'),
+  ('Bahir Dar University',    'BDU',  'Bahir Dar'),
+  ('University of Gondar',   'UOG',  'Gondar'),
+  ('Haramaya University',    'HARU', 'Haramaya'),
+  ('Arba Minch University',  'AMU',  'Arba Minch')
+on conflict (name) do nothing;
 
 insert into public.departments (name, icon) values
-  ('Computer Science & IT', '💻'),
-  ('Civil Engineering', '🏗️'),
-  ('Medicine & Health Sciences', '🏥'),
-  ('Law', '⚖️'),
-  ('Accounting & Finance', '💰'),
-  ('Electrical Engineering', '⚡'),
-  ('Pharmacy', '💊'),
-  ('Economics', '📊')
-on conflict do nothing;
+  ('Computer Science & IT',       '💻'),
+  ('Civil Engineering',           '🏗️'),
+  ('Medicine & Health Sciences',  '🏥'),
+  ('Law',                         '⚖️'),
+  ('Accounting & Finance',        '💰'),
+  ('Electrical Engineering',      '⚡'),
+  ('Pharmacy',                    '💊'),
+  ('Economics',                   '📊'),
+  ('Mechanical Engineering',      '⚙️'),
+  ('Architecture',                '🏛️'),
+  ('Agriculture',                 '🌾'),
+  ('Nursing',                     '🩺')
+on conflict (name) do nothing;

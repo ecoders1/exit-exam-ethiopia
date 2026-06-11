@@ -1,7 +1,11 @@
 import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Routes that require authentication
+const PROTECTED_ROUTES = ["/dashboard"];
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   let supabaseResponse = NextResponse.next({ request });
 
   const cookieMethods: CookieMethodsServer = {
@@ -26,7 +30,20 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Redirect unauthenticated users away from protected routes
+  const isProtected = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
+  if (isProtected && !user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect logged-in users away from login/register
+  if (user && (pathname === "/login" || pathname === "/register")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
   return supabaseResponse;
 }

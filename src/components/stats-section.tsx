@@ -5,10 +5,54 @@ import { University, BookOpen, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stats = [
-  { icon: University, value: 45,    suffix: "+", label: "Universities",  color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-900/20",    ring: "ring-blue-100 dark:ring-blue-900/30",    accent: "#1a56db" },
-  { icon: BookOpen,   value: 27,    suffix: "+", label: "Departments",   color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-900/20",   ring: "ring-amber-100 dark:ring-amber-900/30",   accent: "#f59e0b" },
-  { icon: FileText,   value: 500,   suffix: "+", label: "Exam Papers",   color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20", ring: "ring-violet-100 dark:ring-violet-900/30", accent: "#7c3aed" },
-  { icon: Users,      value: 25000, suffix: "+", label: "Students",      color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", ring: "ring-emerald-100 dark:ring-emerald-900/30", accent: "#059669" },
+  {
+    icon: University,
+    value: 45,
+    suffix: "+",
+    label: "Universities",
+    sub: "Across Ethiopia",
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    glow: "rgba(59,130,246,0.25)",
+    accent: "#3b82f6",
+  },
+  {
+    icon: BookOpen,
+    value: 27,
+    suffix: "+",
+    label: "Departments",
+    sub: "All fields covered",
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    glow: "rgba(245,158,11,0.25)",
+    accent: "#f59e0b",
+  },
+  {
+    icon: FileText,
+    value: 500,
+    suffix: "+",
+    label: "Exam Papers",
+    sub: "Updated regularly",
+    color: "text-violet-400",
+    bg: "bg-violet-500/10",
+    border: "border-violet-500/20",
+    glow: "rgba(139,92,246,0.25)",
+    accent: "#8b5cf6",
+  },
+  {
+    icon: Users,
+    value: 25000,
+    suffix: "+",
+    label: "Students",
+    sub: "Active this year",
+    color: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    glow: "rgba(16,185,129,0.25)",
+    accent: "#10b981",
+  },
 ];
 
 function useCountUp(target: number, duration = 2000, start = false) {
@@ -28,24 +72,38 @@ function useCountUp(target: number, duration = 2000, start = false) {
   return count;
 }
 
-function StatCard({ icon: Icon, value, suffix, label, color, bg, ring, animate }: (typeof stats)[0] & { animate: boolean }) {
+function StatCard({
+  icon: Icon, value, suffix, label, sub,
+  color, bg, border, glow, animate,
+}: (typeof stats)[0] & { animate: boolean }) {
   const count = useCountUp(value, 2200, animate);
 
   return (
-    <div className="group relative premium-card p-7 flex flex-col items-center text-center overflow-hidden transition-all hover:-translate-y-1">
-      {/* Glow effect on hover */}
-      <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl", bg)} style={{ filter: "blur(20px)" }} />
-      
-      <div className={cn("relative w-16 h-16 rounded-2xl flex items-center justify-center mb-5 ring-4 transition-all group-hover:scale-110", bg, ring)}>
-        <Icon className={cn("w-7 h-7", color)} />
+    <div
+      className={cn(
+        "group relative flex flex-col items-center text-center p-7 rounded-2xl border transition-all duration-300 cursor-default",
+        "hover:-translate-y-1.5",
+        bg, border
+      )}
+      style={{ background: "rgba(255,255,255,0.03)", backdropFilter: "blur(8px)" }}
+    >
+      {/* Hover glow */}
+      <div
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ boxShadow: `0 0 30px ${glow}`, background: `radial-gradient(ellipse at 50% 0%, ${glow} 0%, transparent 70%)` }}
+      />
+
+      <div className={cn("relative w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 duration-300", bg)}>
+        <Icon className={cn("w-6 h-6", color)} />
       </div>
-      
+
       <div className="relative">
-        <div className="text-4xl font-black text-gray-900 dark:text-white">
+        <div className="text-[2.6rem] font-black text-white leading-none tracking-tight">
           {count.toLocaleString()}
-          <span className={cn("ml-1 text-3xl", color)}>{suffix}</span>
+          <span className={cn("ml-1 text-2xl font-black", color)}>{suffix}</span>
         </div>
-        <p className="mt-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="mt-2 text-sm font-bold text-white/70">{label}</p>
+        <p className="mt-0.5 text-xs text-white/30">{sub}</p>
       </div>
     </div>
   );
@@ -65,15 +123,22 @@ export function StatsSection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-20 bg-white dark:bg-gray-950 relative overflow-hidden">
-      {/* Subtle top border gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+    <section
+      ref={ref}
+      className="py-20 relative overflow-hidden"
+      style={{ background: "linear-gradient(to bottom, #060c1a, #080e20)" }}
+    >
+      {/* Top gradient border */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Subtle grid */}
+      <div className="absolute inset-0 opacity-[0.025]"
+        style={{ backgroundImage: "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)", backgroundSize: "48px 48px" }}
+      />
 
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} animate={animate} />
           ))}

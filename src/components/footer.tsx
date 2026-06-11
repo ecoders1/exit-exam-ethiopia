@@ -112,9 +112,15 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
-            © 2026 Exit Exam Ethiopia. All rights reserved.
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-gray-500">
+              © 2026 Exit Exam Ethiopia. All rights reserved.
+            </p>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-600/15 border border-blue-500/20 text-xs font-medium text-blue-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+              v1.0.0
+            </span>
+          </div>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="text-sm text-gray-500 hover:text-blue-400 transition-colors">
               Privacy Policy

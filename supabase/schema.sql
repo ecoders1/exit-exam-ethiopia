@@ -46,6 +46,42 @@ create table if not exists public.departments (
   created_at  timestamptz not null default now()
 );
 
+-- Ensure role column exists (guards against schemas created before this column was added)
+alter table public.profiles
+  add column if not exists role text not null default 'student';
+
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'profiles_role_check'
+      and conrelid = 'public.profiles'::regclass
+  ) then
+    alter table public.profiles
+      add constraint profiles_role_check check (role in ('student', 'admin'));
+  end if;
+end $$;
+
+-- Ensure unique constraints exist (guards against tables created before these were added)
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'universities_name_key'
+      and conrelid = 'public.universities'::regclass
+  ) then
+    alter table public.universities add constraint universities_name_key unique (name);
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'departments_name_key'
+      and conrelid = 'public.departments'::regclass
+  ) then
+    alter table public.departments add constraint departments_name_key unique (name);
+  end if;
+end $$;
+
 -- Add FK constraints on profiles after universities/departments exist
 do $$ begin
   if not exists (

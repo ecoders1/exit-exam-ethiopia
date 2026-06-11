@@ -8,7 +8,8 @@ create extension if not exists "uuid-ossp";
 
 -- Drop helper function early so it can be cleanly recreated later
 -- (prevents stale definitions that reference wrong columns)
-drop function if exists public.is_admin();
+-- CASCADE drops dependent policies, which are all recreated below.
+drop function if exists public.is_admin() cascade;
 
 -- ============================================================
 -- Tables

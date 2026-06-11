@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAuth() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.replace("/login"); return; }
+      if (!user) { router.replace("/login"); setChecking(false); return; }
 
       // Check role in DB (source of truth)
       const { data: profile } = await supabase

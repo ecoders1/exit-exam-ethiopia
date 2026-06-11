@@ -4,10 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { isAdmin } from "@/lib/supabase/admin";
 import {
   LayoutDashboard, University, BookOpen, FileText, Users,
-  LogOut, Menu, X, GraduationCap, ChevronRight, Sun, Moon, ShieldAlert,
+  LogOut, Menu, X, GraduationCap, ChevronRight, Sun, Moon, ShieldAlert, UserPlus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -35,7 +34,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAuth() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !isAdmin(user.email)) {
+      if (!user) { router.replace("/login"); return; }
+
+      // Check role in DB (source of truth)
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role !== "admin") {
         router.replace("/login");
         return;
       }

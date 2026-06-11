@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, GraduationCap, Star, Zap, Shield, Users } from "lucide-react";
+import { ArrowRight, BookOpen, GraduationCap, Zap, Shield, Users, Play, Sparkles } from "lucide-react";
 
 const FLOATING_TAGS = [
   { text: "Computer Science",   top: "15%", left: "5%",   delay: "0s" },

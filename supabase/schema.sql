@@ -171,6 +171,11 @@ $$ language sql security definer stable;
 -- Policies — universities
 -- ============================================================
 drop policy if exists "Public universities are viewable by everyone" on public.universities;
+drop policy if exists "Universities: public read"   on public.universities;
+drop policy if exists "Universities: admin insert"  on public.universities;
+drop policy if exists "Universities: admin update"  on public.universities;
+drop policy if exists "Universities: admin delete"  on public.universities;
+
 create policy "Universities: public read"
   on public.universities for select using (true);
 
@@ -190,6 +195,11 @@ create policy "Universities: admin delete"
 -- Policies — departments
 -- ============================================================
 drop policy if exists "Public departments are viewable by everyone" on public.departments;
+drop policy if exists "Departments: public read"   on public.departments;
+drop policy if exists "Departments: admin insert"  on public.departments;
+drop policy if exists "Departments: admin update"  on public.departments;
+drop policy if exists "Departments: admin delete"  on public.departments;
+
 create policy "Departments: public read"
   on public.departments for select using (true);
 
@@ -209,6 +219,12 @@ create policy "Departments: admin delete"
 -- Policies — exams
 -- ============================================================
 drop policy if exists "Published exams are viewable by everyone" on public.exams;
+drop policy if exists "Exams: public read published" on public.exams;
+drop policy if exists "Exams: admin read all"        on public.exams;
+drop policy if exists "Exams: admin insert"          on public.exams;
+drop policy if exists "Exams: admin update"          on public.exams;
+drop policy if exists "Exams: admin delete"          on public.exams;
+
 create policy "Exams: public read published"
   on public.exams for select using (is_published = true);
 
@@ -233,6 +249,9 @@ create policy "Exams: admin delete"
 -- ============================================================
 drop policy if exists "Users can view own profile"   on public.profiles;
 drop policy if exists "Users can update own profile" on public.profiles;
+drop policy if exists "Profiles: own read"           on public.profiles;
+drop policy if exists "Profiles: own update"         on public.profiles;
+drop policy if exists "Profiles: admin read all"     on public.profiles;
 
 create policy "Profiles: own read"
   on public.profiles for select using (auth.uid() = id);
@@ -250,6 +269,9 @@ create policy "Profiles: admin read all"
 drop policy if exists "Users can view own progress"   on public.user_exam_progress;
 drop policy if exists "Users can upsert own progress" on public.user_exam_progress;
 drop policy if exists "Users can update own progress" on public.user_exam_progress;
+drop policy if exists "Progress: own read"            on public.user_exam_progress;
+drop policy if exists "Progress: own insert"          on public.user_exam_progress;
+drop policy if exists "Progress: own update"          on public.user_exam_progress;
 
 create policy "Progress: own read"
   on public.user_exam_progress for select using (auth.uid() = user_id);

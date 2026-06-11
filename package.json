@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:push": "powershell -ExecutionPolicy Bypass -File scripts/push-schema.ps1",
     "release:patch": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1 patch",
     "release:minor": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1 minor",
     "release:major": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1 major"

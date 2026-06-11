@@ -17,6 +17,7 @@ const navItems = [
   { href: "/admin/departments", label: "Departments", icon: BookOpen },
   { href: "/admin/exams", label: "Exams", icon: FileText },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/create-user", label: "Create User", icon: UserPlus },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -71,18 +71,7 @@ export function StatsSection() {
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            Trusted by Students Across Ethiopia
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">
-            The Platform That <span className="text-blue-gradient">Delivers Results</span>
-          </h2>
-          <p className="mt-3 text-gray-400 max-w-xl mx-auto text-base">
-            Join thousands of Ethiopian university students who use Exit Exam Ethiopia to prepare and pass.
-          </p>
-        </div>
+
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           {stats.map((stat) => (

@@ -91,18 +91,7 @@ export function FeaturesSection() {
         style={{ backgroundImage: "linear-gradient(rgba(0,0,0,1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,1) 1px, transparent 1px)", backgroundSize: "40px 40px" }}
       />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-bold mb-4">
-            ✦ PLATFORM FEATURES
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">
-            Everything You Need to <span className="text-blue-gradient">Pass</span>
-          </h2>
-          <p className="mt-4 text-gray-400 text-lg">
-            A complete exam preparation toolkit built specifically for Ethiopian university students.
-          </p>
-        </div>
+
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

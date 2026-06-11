@@ -34,7 +34,6 @@ export function CtaSection() {
             </div>
 
             <h2 className="text-3xl sm:text-5xl font-black leading-tight mb-5">
-              Start Preparing for<br />
               <span className="text-gold-gradient">Your Exit Exam Today</span>
             </h2>
 

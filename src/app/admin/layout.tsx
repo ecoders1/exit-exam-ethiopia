@@ -46,6 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       if (profile?.role !== "admin") {
         router.replace("/login");
+        setChecking(false);
         return;
       }
       setAdminEmail(user.email ?? "");

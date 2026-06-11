@@ -120,7 +120,8 @@ export default function LoginPage() {
       setError(verifyError.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      const dest = await getRedirectUrl();
+      router.push(dest);
       router.refresh();
     }
   };

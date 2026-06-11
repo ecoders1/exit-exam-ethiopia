@@ -8,6 +8,8 @@
   --color-brand-gold:        #f59e0b;
   --color-brand-gold-light:  #fcd34d;
   --color-brand-gold-dark:   #b45309;
+  --color-brand-navy:        #0a0f1e;
+  --color-brand-navy-mid:    #0d1b4b;
 
   /* ── Semantic tokens ── */
   --color-background:        hsl(0 0% 100%);

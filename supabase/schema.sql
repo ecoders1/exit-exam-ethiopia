@@ -43,13 +43,25 @@ create table if not exists public.departments (
 );
 
 -- Add FK constraints on profiles after universities/departments exist
-alter table public.profiles
-  add constraint if not exists profiles_university_id_fkey
-  foreign key (university_id) references public.universities(id) on delete set null;
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'profiles_university_id_fkey'
+  ) then
+    alter table public.profiles
+      add constraint profiles_university_id_fkey
+      foreign key (university_id) references public.universities(id) on delete set null;
+  end if;
+end $$;
 
-alter table public.profiles
-  add constraint if not exists profiles_department_id_fkey
-  foreign key (department_id) references public.departments(id) on delete set null;
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'profiles_department_id_fkey'
+  ) then
+    alter table public.profiles
+      add constraint profiles_department_id_fkey
+      foreign key (department_id) references public.departments(id) on delete set null;
+  end if;
+end $$;
 
 -- Exams
 create table if not exists public.exams (

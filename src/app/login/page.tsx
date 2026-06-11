@@ -52,6 +52,24 @@ export default function LoginPage() {
   //  Handlers
   // ──────────────────────────────────────────────
 
+  /** Determine post-login destination based on role */
+  const getRedirectUrl = async (): Promise<string> => {
+    // Honour `?next=` param if present (e.g. middleware bounce)
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("next");
+    if (next) return next;
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return "/dashboard";
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    return profile?.role === "admin" ? "/admin" : "/dashboard";
+  };
+
   /** Email + password sign-in */
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +81,8 @@ export default function LoginPage() {
       setError(authError.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      const dest = await getRedirectUrl();
+      router.push(dest);
       router.refresh();
     }
   };
